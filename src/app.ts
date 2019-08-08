@@ -9,7 +9,9 @@ import path from "path";
 import mongoose from "mongoose";
 import passport from "passport";
 import bluebird from "bluebird";
-import { MONGODB_URI, SESSION_SECRET } from "./util/secrets";
+import amqplib from "amqplib";
+
+import { MONGODB_URI, SESSION_SECRET, AMQP_URL } from "./util/secrets";
 
 const MongoStore = mongo(session);
 
@@ -35,6 +37,13 @@ mongoose.connect(mongoUrl, { useNewUrlParser: true} ).then(
 ).catch(err => {
     console.log("MongoDB connection error. Please make sure MongoDB is running. " + err);
     // process.exit();
+});
+
+amqplib.connect(AMQP_URL).then((cnn: amqplib.Connection) => {
+    console.log("AMQP connection established.");
+    global.connection = cnn;
+}).catch((err) => {
+    console.log("AMQP connection error." + err);
 });
 
 // Express configuration

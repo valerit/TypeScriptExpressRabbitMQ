@@ -28,3 +28,5 @@ if (!MONGODB_URI) {
     }
     process.exit(1);
 }
+
+export const AMQP_URL = process.env["AMQP_URL"];
