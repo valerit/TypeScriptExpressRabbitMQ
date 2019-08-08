@@ -1,6 +1,7 @@
 import nodemailer from "nodemailer";
 import { Request, Response } from "express";
 import { check, validationResult } from "express-validator";
+import amqplib from "amqplib";
 
 const transporter = nodemailer.createTransport({
     service: "SendGrid",
@@ -24,7 +25,7 @@ export const getContact = (req: Request, res: Response) => {
  * POST /contact
  * Send a contact form via Nodemailer.
  */
-export const postContact = (req: Request, res: Response) => {
+export const postContact = async (req: Request, res: Response) => {
     check("name", "Name cannot be blank").not().isEmpty();
     check("email", "Email is not valid").isEmail();
     check("message", "Message cannot be blank").not().isEmpty();
@@ -42,6 +43,12 @@ export const postContact = (req: Request, res: Response) => {
         subject: "Contact Form",
         text: req.body.message
     };
+    const connection: amqplib.Connection = global.connection;
+
+    const channel = await connection.createChannel();
+
+    await channel.sendToQueue("contacts", Buffer.from(JSON.stringify(mailOptions)));
+
     req.flash("success", { msg: "Email has been sent successfully!" });
     res.redirect("/contact");
     
